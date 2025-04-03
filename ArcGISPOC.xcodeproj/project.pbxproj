@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CE5E7B8E2D9E55ED006E53BC /* ArcGIS in Frameworks */ = {isa = PBXBuildFile; productRef = CE5E7B8D2D9E55ED006E53BC /* ArcGIS */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		CE5E7B6F2D9E5570006E53BC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE5E7B8E2D9E55ED006E53BC /* ArcGIS in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +130,7 @@
 			);
 			name = ArcGISPOC;
 			packageProductDependencies = (
+				CE5E7B8D2D9E55ED006E53BC /* ArcGIS */,
 			);
 			productName = ArcGISPOC;
 			productReference = CE5E7B582D9E556F006E53BC /* ArcGISPOC.app */;
@@ -208,6 +214,9 @@
 			);
 			mainGroup = CE5E7B4F2D9E556F006E53BC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CE5E7B8C2D9E55ED006E53BC /* XCRemoteSwiftPackageReference "arcgis-runtime-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CE5E7B592D9E556F006E53BC /* Products */;
 			projectDirPath = "";
@@ -571,6 +580,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CE5E7B8C2D9E55ED006E53BC /* XCRemoteSwiftPackageReference "arcgis-runtime-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Esri/arcgis-runtime-ios/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 100.15.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CE5E7B8D2D9E55ED006E53BC /* ArcGIS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE5E7B8C2D9E55ED006E53BC /* XCRemoteSwiftPackageReference "arcgis-runtime-ios" */;
+			productName = ArcGIS;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CE5E7B502D9E556F006E53BC /* Project object */;
 }

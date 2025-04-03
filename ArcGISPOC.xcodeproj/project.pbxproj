@@ -1,0 +1,576 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		CE5E7B6F2D9E5570006E53BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE5E7B502D9E556F006E53BC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE5E7B572D9E556F006E53BC;
+			remoteInfo = ArcGISPOC;
+		};
+		CE5E7B792D9E5570006E53BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE5E7B502D9E556F006E53BC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE5E7B572D9E556F006E53BC;
+			remoteInfo = ArcGISPOC;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		CE5E7B582D9E556F006E53BC /* ArcGISPOC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArcGISPOC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE5E7B6E2D9E5570006E53BC /* ArcGISPOCTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArcGISPOCTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE5E7B782D9E5570006E53BC /* ArcGISPOCUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArcGISPOCUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CE5E7B802D9E5570006E53BC /* Exceptions for "ArcGISPOC" folder in "ArcGISPOC" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CE5E7B572D9E556F006E53BC /* ArcGISPOC */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		CE5E7B5A2D9E556F006E53BC /* ArcGISPOC */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CE5E7B802D9E5570006E53BC /* Exceptions for "ArcGISPOC" folder in "ArcGISPOC" target */,
+			);
+			path = ArcGISPOC;
+			sourceTree = "<group>";
+		};
+		CE5E7B712D9E5570006E53BC /* ArcGISPOCTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ArcGISPOCTests;
+			sourceTree = "<group>";
+		};
+		CE5E7B7B2D9E5570006E53BC /* ArcGISPOCUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ArcGISPOCUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CE5E7B552D9E556F006E53BC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5E7B6B2D9E5570006E53BC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5E7B752D9E5570006E53BC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CE5E7B4F2D9E556F006E53BC = {
+			isa = PBXGroup;
+			children = (
+				CE5E7B5A2D9E556F006E53BC /* ArcGISPOC */,
+				CE5E7B712D9E5570006E53BC /* ArcGISPOCTests */,
+				CE5E7B7B2D9E5570006E53BC /* ArcGISPOCUITests */,
+				CE5E7B592D9E556F006E53BC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CE5E7B592D9E556F006E53BC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CE5E7B582D9E556F006E53BC /* ArcGISPOC.app */,
+				CE5E7B6E2D9E5570006E53BC /* ArcGISPOCTests.xctest */,
+				CE5E7B782D9E5570006E53BC /* ArcGISPOCUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CE5E7B572D9E556F006E53BC /* ArcGISPOC */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE5E7B812D9E5570006E53BC /* Build configuration list for PBXNativeTarget "ArcGISPOC" */;
+			buildPhases = (
+				CE5E7B542D9E556F006E53BC /* Sources */,
+				CE5E7B552D9E556F006E53BC /* Frameworks */,
+				CE5E7B562D9E556F006E53BC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CE5E7B5A2D9E556F006E53BC /* ArcGISPOC */,
+			);
+			name = ArcGISPOC;
+			packageProductDependencies = (
+			);
+			productName = ArcGISPOC;
+			productReference = CE5E7B582D9E556F006E53BC /* ArcGISPOC.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CE5E7B6D2D9E5570006E53BC /* ArcGISPOCTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE5E7B862D9E5570006E53BC /* Build configuration list for PBXNativeTarget "ArcGISPOCTests" */;
+			buildPhases = (
+				CE5E7B6A2D9E5570006E53BC /* Sources */,
+				CE5E7B6B2D9E5570006E53BC /* Frameworks */,
+				CE5E7B6C2D9E5570006E53BC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE5E7B702D9E5570006E53BC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE5E7B712D9E5570006E53BC /* ArcGISPOCTests */,
+			);
+			name = ArcGISPOCTests;
+			packageProductDependencies = (
+			);
+			productName = ArcGISPOCTests;
+			productReference = CE5E7B6E2D9E5570006E53BC /* ArcGISPOCTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CE5E7B772D9E5570006E53BC /* ArcGISPOCUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE5E7B892D9E5570006E53BC /* Build configuration list for PBXNativeTarget "ArcGISPOCUITests" */;
+			buildPhases = (
+				CE5E7B742D9E5570006E53BC /* Sources */,
+				CE5E7B752D9E5570006E53BC /* Frameworks */,
+				CE5E7B762D9E5570006E53BC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE5E7B7A2D9E5570006E53BC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CE5E7B7B2D9E5570006E53BC /* ArcGISPOCUITests */,
+			);
+			name = ArcGISPOCUITests;
+			packageProductDependencies = (
+			);
+			productName = ArcGISPOCUITests;
+			productReference = CE5E7B782D9E5570006E53BC /* ArcGISPOCUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CE5E7B502D9E556F006E53BC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					CE5E7B572D9E556F006E53BC = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					CE5E7B6D2D9E5570006E53BC = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = CE5E7B572D9E556F006E53BC;
+					};
+					CE5E7B772D9E5570006E53BC = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = CE5E7B572D9E556F006E53BC;
+					};
+				};
+			};
+			buildConfigurationList = CE5E7B532D9E556F006E53BC /* Build configuration list for PBXProject "ArcGISPOC" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CE5E7B4F2D9E556F006E53BC;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CE5E7B592D9E556F006E53BC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CE5E7B572D9E556F006E53BC /* ArcGISPOC */,
+				CE5E7B6D2D9E5570006E53BC /* ArcGISPOCTests */,
+				CE5E7B772D9E5570006E53BC /* ArcGISPOCUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CE5E7B562D9E556F006E53BC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5E7B6C2D9E5570006E53BC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5E7B762D9E5570006E53BC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CE5E7B542D9E556F006E53BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5E7B6A2D9E5570006E53BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE5E7B742D9E5570006E53BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CE5E7B702D9E5570006E53BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE5E7B572D9E556F006E53BC /* ArcGISPOC */;
+			targetProxy = CE5E7B6F2D9E5570006E53BC /* PBXContainerItemProxy */;
+		};
+		CE5E7B7A2D9E5570006E53BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE5E7B572D9E556F006E53BC /* ArcGISPOC */;
+			targetProxy = CE5E7B792D9E5570006E53BC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CE5E7B822D9E5570006E53BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ArcGISPOC/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pick.collage.2025.ArcGISPOC;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE5E7B832D9E5570006E53BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ArcGISPOC/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pick.collage.2025.ArcGISPOC;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CE5E7B842D9E5570006E53BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CE5E7B852D9E5570006E53BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 447HA2827L;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CE5E7B872D9E5570006E53BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pick.collage.2025.ArcGISPOCTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ArcGISPOC.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ArcGISPOC";
+			};
+			name = Debug;
+		};
+		CE5E7B882D9E5570006E53BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pick.collage.2025.ArcGISPOCTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ArcGISPOC.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ArcGISPOC";
+			};
+			name = Release;
+		};
+		CE5E7B8A2D9E5570006E53BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pick.collage.2025.ArcGISPOCUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ArcGISPOC;
+			};
+			name = Debug;
+		};
+		CE5E7B8B2D9E5570006E53BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 447HA2827L;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = pick.collage.2025.ArcGISPOCUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ArcGISPOC;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CE5E7B532D9E556F006E53BC /* Build configuration list for PBXProject "ArcGISPOC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE5E7B842D9E5570006E53BC /* Debug */,
+				CE5E7B852D9E5570006E53BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE5E7B812D9E5570006E53BC /* Build configuration list for PBXNativeTarget "ArcGISPOC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE5E7B822D9E5570006E53BC /* Debug */,
+				CE5E7B832D9E5570006E53BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE5E7B862D9E5570006E53BC /* Build configuration list for PBXNativeTarget "ArcGISPOCTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE5E7B872D9E5570006E53BC /* Debug */,
+				CE5E7B882D9E5570006E53BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE5E7B892D9E5570006E53BC /* Build configuration list for PBXNativeTarget "ArcGISPOCUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE5E7B8A2D9E5570006E53BC /* Debug */,
+				CE5E7B8B2D9E5570006E53BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CE5E7B502D9E556F006E53BC /* Project object */;
+}

@@ -9,40 +9,29 @@ import UIKit
 import ArcGIS
 
 class ViewController: UIViewController {
-    let graphicsOverlay = AGSGraphicsOverlay()
+    let pointsOverlay = AGSGraphicsOverlay() // For points
+    let shapesOverlay = AGSGraphicsOverlay() // For shapes
     let sketchEditor = AGSSketchEditor()
-    let creationModes: KeyValuePairs = [
-        "Arrow": AGSSketchCreationMode.arrow,
-        "Ellipse": .ellipse,
-        "Lasso": .freehandPolygon,
-        "FreehandPolyline": .freehandPolyline,
-        "Multipoint": .multipoint,
-        "Point": .point,
-        "Polygon": .polygon,
-        "Polyline": .polyline,
-        "Rectangle": .rectangle,
-        "Triangle": .triangle
-    ]
     var barItemObserver: NSObjectProtocol!
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        
         view.addSubview(mapView)
         mapView.setViewpoint(AGSViewpoint(latitude: 56.075844, longitude: -2.681572, scale: 288895.277144))
         
-        // Set the spatial reference for the sketch editor to match the points
-        //sketchEditor.tool.spatialReference = AGSSpatialReference.wgs84()
-        
-        // Add the graphics overlay to the map view.
-        mapView.graphicsOverlays.add(graphicsOverlay)
+        // Add both graphics overlays to the map view
+        mapView.graphicsOverlays.addObjects(from: [pointsOverlay, shapesOverlay])
 
-        // Check and load saved points or add custom points
+        // Load or add points
         if hasSavedPoints() {
-            loadSavedPoints()
+        //    loadSavedPoints()
         } else {
-            addCustomPoints()
+        //    addCustomPoints()
         }
+        
+        // Load saved shapes
+        addCustomPoints()
         
         view.addSubview(statusLabel)
         NSLayoutConstraint.activate([
@@ -68,20 +57,55 @@ class ViewController: UIViewController {
     }
     
     private func handleSketchEditorChange() {
-        // Check if the drawing is complete (you can add more validation if needed)
         if let geometry = sketchEditor.geometry, !geometry.isEmpty {
             print("Drawing completed or updated.")
             selectPointsInsideShape()
-        }
-    }
-    
-    // Make sure to remove the observer when appropriate, like in deinit
-    deinit {
-        if let observer = barItemObserver {
-            NotificationCenter.default.removeObserver(observer)
+            
+            // Create a graphic from the sketch and add it to the shapes overlay
+            let fillSymbol = AGSSimpleFillSymbol(style: .solid, color: .blue.withAlphaComponent(0.2), outline: AGSSimpleLineSymbol(style: .solid, color: .blue, width: 2))
+            let graphic = AGSGraphic(geometry: geometry, symbol: fillSymbol)
+            shapesOverlay.graphics.add(graphic)
         }
     }
 
+    func selectPointsInsideShape() {
+        guard let sketchGeometry = sketchEditor.geometry else { return }
+        
+        // Reset all selections first
+        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
+            graphic.isSelected = false
+        }
+        
+        var selectedIds: [Int] = []
+        
+        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
+            if let pointGeometry = graphic.geometry as? AGSPoint {
+                // Project point to sketch's spatial reference if needed
+                if pointGeometry.spatialReference != sketchGeometry.spatialReference {
+                    guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: sketchGeometry.spatialReference!) else { continue }
+                    
+                    if AGSGeometryEngine.geometry(projectedPoint, within: sketchGeometry) {
+                        graphic.isSelected = true
+                        if let id = graphic.attributes["id"] as? Int {
+                            selectedIds.append(id)
+                        }
+                    }
+                } else {
+                    if AGSGeometryEngine.geometry(pointGeometry, within: sketchGeometry) {
+                        graphic.isSelected = true
+                        if let id = graphic.attributes["id"] as? Int {
+                            selectedIds.append(id)
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Sort and print selected IDs
+        selectedIds.sort()
+        print("Selected point IDs: \(selectedIds)")
+    }
+    
     lazy var statusLabel: UILabel = {
         let label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -107,7 +131,7 @@ class ViewController: UIViewController {
         // Create a background view for the bottom bar
         let bottomBarBackground = UIView()
         bottomBarBackground.translatesAutoresizingMaskIntoConstraints = false
-        bottomBarBackground.backgroundColor = .lightGray // CHANGE: Set your desired color here
+        bottomBarBackground.backgroundColor = .lightGray
         
         // Add the background view and then the stack view to it
         view.addSubview(bottomBarBackground)
@@ -157,10 +181,22 @@ class ViewController: UIViewController {
         return button
     }
 
-    // ADD: Function to handle button taps
     @objc private func bottomBarButtonTapped(_ sender: UIButton) {
         guard let title = sender.titleLabel?.text else { return }
         print("\(title) button tapped")
+        
+        let creationModes: KeyValuePairs = [
+            "Arrow": AGSSketchCreationMode.arrow,
+            "Ellipse": .ellipse,
+            "Lasso": .freehandPolygon,
+            "FreehandPolyline": .freehandPolyline,
+            "Multipoint": .multipoint,
+            "Point": .point,
+            "Polygon": .polygon,
+            "Polyline": .polyline,
+            "Rectangle": .rectangle,
+            "Triangle": .triangle
+        ]
         
         for (name, mode) in creationModes {
             if name == title {
@@ -176,8 +212,7 @@ class ViewController: UIViewController {
     }
     
     func addCustomPoints() {
-        // CHANGE: Use a local image file for the apple icon
-        if let appleImage = UIImage(named: "applelogo") { // Ensure "applelogo" is in your asset catalog
+        if let appleImage = UIImage(named: "applelogo") {
             let markerSymbol = AGSPictureMarkerSymbol(image: appleImage)
             markerSymbol.width = 20
             markerSymbol.height = 20
@@ -185,23 +220,20 @@ class ViewController: UIViewController {
             // Example initial point
             let centerPoint = AGSPoint(x: -2.712642647560347, y: 56.062812566811544, spatialReference: .wgs84())
             
-            // Add the initial example point
-            let initialGraphic = AGSGraphic(geometry: centerPoint, symbol: markerSymbol, attributes: ["name": "Center Point"])
-            graphicsOverlay.graphics.add(initialGraphic)
+            // Add the initial example point with id 0
+            let initialGraphic = AGSGraphic(geometry: centerPoint, symbol: markerSymbol, attributes: ["id": 0, "name": "Center Point"])
+            pointsOverlay.graphics.add(initialGraphic)
             
-            // ADD: Generate 48 more random points around the initial point and add them to the overlay
-            for i in 0..<48 {
+            // Generate 48 more random points around the initial point and add them to the overlay
+            for i in 1..<49 { // Start from 1 since center point is 0
                 let randomX = centerPoint.x + Double.random(in: -0.01...0.01)
                 let randomY = centerPoint.y + Double.random(in: -0.01...0.01)
                 let randomPoint = AGSPoint(x: randomX, y: randomY, spatialReference: .wgs84())
-                let graphic = AGSGraphic(geometry: randomPoint, symbol: markerSymbol, attributes: ["name": "Point \(i + 1)"])
-                graphicsOverlay.graphics.add(graphic)
+                let graphic = AGSGraphic(geometry: randomPoint, symbol: markerSymbol, attributes: ["id": i, "name": "Point \(i)"])
+                pointsOverlay.graphics.add(graphic)
             }
             
-            // Save all the points
-            saveGraphics(graphics: Array(_immutableCocoaArray: graphicsOverlay.graphics))
-        } else {
-            print("Image 'applelogo' not found in assets.")
+            saveGraphics(graphics: Array(_immutableCocoaArray: pointsOverlay.graphics))
         }
     }
 
@@ -219,7 +251,6 @@ class ViewController: UIViewController {
             }
         }
         
-        // Persist jsonData to UserDefaults
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: pointsArray, options: .prettyPrinted)
             UserDefaults.standard.setValue(jsonData, forKey: "savedPoints")
@@ -234,8 +265,7 @@ class ViewController: UIViewController {
         
         do {
             if let pointsArray = try JSONSerialization.jsonObject(with: jsonData, options: []) as? [[String: Any]] {
-                // CHANGE: Use an apple icon for loaded points
-                if let appleImage = UIImage(named: "applelogo") { // Ensure "applelogo" is in your asset catalog
+                if let appleImage = UIImage(named: "applelogo") {
                     let markerSymbol = AGSPictureMarkerSymbol(image: appleImage)
                     markerSymbol.width = 20
                     markerSymbol.height = 20
@@ -245,11 +275,9 @@ class ViewController: UIViewController {
                            let longitude = pointDict["longitude"] as? Double {
                             let point = AGSPoint(x: longitude, y: latitude, spatialReference: .wgs84())
                             let graphic = AGSGraphic(geometry: point, symbol: markerSymbol, attributes: pointDict["attributes"] as? [String: Any])
-                            graphicsOverlay.graphics.add(graphic)
+                            pointsOverlay.graphics.add(graphic)
                         }
                     }
-                } else {
-                    print("Image 'applelogo' not found in assets.")
                 }
             }
         } catch {
@@ -257,25 +285,13 @@ class ViewController: UIViewController {
         }
     }
     
-    func selectPointsInsideShape() {
-        guard let sketchGeometry = sketchEditor.geometry else { return }
-        
-        for graphic in graphicsOverlay.graphics as! [AGSGraphic] { // Ensure correct casting
-            if let pointGeometry = graphic.geometry as? AGSPoint {
-                // Ensure both geometries are in the same spatial reference
-                if pointGeometry.spatialReference != sketchGeometry.spatialReference {
-                    print("Spatial reference mismatch: Point-\(pointGeometry.spatialReference), Shape-\(sketchGeometry.spatialReference)")
-                    continue
-                }
-                
-                if AGSGeometryEngine.geometry(pointGeometry, within: sketchGeometry) {
-                    graphic.isSelected = true
-                    print("Point inside shape: \(graphic.attributes)")
-                } else {
-                    graphic.isSelected = false
-                    print("Point outside shape: \(graphic.attributes)")
-                }
-            }
+    func loadSavedShapes() {
+        // Add implementation to load saved shapes
+    }
+    
+    deinit {
+        if let observer = barItemObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 }

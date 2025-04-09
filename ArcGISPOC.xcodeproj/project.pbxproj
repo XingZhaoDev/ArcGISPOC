@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE2AFCDC2DA39ECF00105555 /* FLAnimatedImage in Frameworks */ = {isa = PBXBuildFile; productRef = CE2AFCDB2DA39ECF00105555 /* FLAnimatedImage */; };
 		CE5E7B8E2D9E55ED006E53BC /* ArcGIS in Frameworks */ = {isa = PBXBuildFile; productRef = CE5E7B8D2D9E55ED006E53BC /* ArcGIS */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE5E7B8E2D9E55ED006E53BC /* ArcGIS in Frameworks */,
+				CE2AFCDC2DA39ECF00105555 /* FLAnimatedImage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = ArcGISPOC;
 			packageProductDependencies = (
 				CE5E7B8D2D9E55ED006E53BC /* ArcGIS */,
+				CE2AFCDB2DA39ECF00105555 /* FLAnimatedImage */,
 			);
 			productName = ArcGISPOC;
 			productReference = CE5E7B582D9E556F006E53BC /* ArcGISPOC.app */;
@@ -216,6 +219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				CE5E7B8C2D9E55ED006E53BC /* XCRemoteSwiftPackageReference "arcgis-runtime-ios" */,
+				CE2AFCDA2DA39ECF00105555 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CE5E7B592D9E556F006E53BC /* Products */;
@@ -582,6 +586,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		CE2AFCDA2DA39ECF00105555 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Flipboard/FLAnimatedImage.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.17;
+			};
+		};
 		CE5E7B8C2D9E55ED006E53BC /* XCRemoteSwiftPackageReference "arcgis-runtime-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Esri/arcgis-runtime-ios/";
@@ -593,6 +605,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		CE2AFCDB2DA39ECF00105555 /* FLAnimatedImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE2AFCDA2DA39ECF00105555 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */;
+			productName = FLAnimatedImage;
+		};
 		CE5E7B8D2D9E55ED006E53BC /* ArcGIS */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CE5E7B8C2D9E55ED006E53BC /* XCRemoteSwiftPackageReference "arcgis-runtime-ios" */;

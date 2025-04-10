@@ -13,18 +13,16 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     let shapesOverlay = AGSGraphicsOverlay() // For shapes
     let sketchEditor = AGSSketchEditor()
     var barItemObserver: NSObjectProtocol!
-    // ADD: Track last added graphic for undo
     private var lastAddedGraphic: AGSGraphic?
-    // ADD: Track currently selected button
     private var selectedButton: UIButton?
-    // ADD: Track selected points across shapes
     private var selectedPointIds: Set<Int> = []
     private var selectedGeometries: [AGSGeometry] = []
-    
+    private var geometrySelectionsStack: [(geometry: AGSGeometry, selectedIds: Set<Int>)] = []
+    private var currentCreationMode: AGSSketchCreationMode?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // ADD: Set view background color
         view.backgroundColor = .systemBackground
         
         // Configure navigation bar appearance
@@ -44,7 +42,6 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         view.addSubview(mapView)
         mapView.backgroundColor = .systemBackground
         
-        // CHANGE: Set initial viewpoint to Vancouver, BC
         mapView.setViewpoint(AGSViewpoint(
             center: AGSPoint(x: -123.1207, y: 49.2827, spatialReference: .wgs84()), // Vancouver coordinates
             scale: 25000  // City level zoom
@@ -59,11 +56,11 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         
         // Load or add points
         if hasSavedPoints() {
-           // loadSavedPoints()
+            loadSavedPoints()
         } else {
-          //  addCustomPoints()
+            addCustomPoints()
         }
-        addCustomPoints()
+        //addCustomPoints()
         view.addSubview(statusLabel)
         NSLayoutConstraint.activate([
             statusLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
@@ -89,18 +86,32 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     
     private func handleSketchEditorChange() {
         if let geometry = sketchEditor.geometry, !geometry.isEmpty {
+            // Store current selection state before adding new one
+            let previousSelectedIds = selectedPointIds
+            
             if geometry is AGSPolyline {
-                // For freehand polyline
                 selectPointsNearPolyline(geometry as! AGSPolyline)
             } else {
-                // For other shapes (polygons, rectangles, etc.)
                 selectPointsInsideShape(with: geometry)
             }
+            
+            // Store the geometry and its newly selected points
+            let newlySelectedIds = selectedPointIds.subtracting(previousSelectedIds)
+            geometrySelectionsStack.append((geometry: geometry, selectedIds: newlySelectedIds))
             
             // Clear the sketch editor and shapes overlay after selection is complete
             DispatchQueue.main.async {
                 self.sketchEditor.clearGeometry()
                 self.shapesOverlay.graphics.removeAllObjects()
+                
+                // Reset sketch editor mode and button state
+                self.sketchEditor.stop()
+                self.currentCreationMode = nil
+                self.selectedButton?.configuration?.background.backgroundColor = .clear
+                self.selectedButton = nil
+                
+                // Update status label with selected count
+                self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
             }
         }
     }
@@ -109,42 +120,45 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         // Add new geometry to the list
         selectedGeometries.append(geometry)
         
-        // Reset all selections first
-        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-            graphic.isSelected = false
-        }
+        var pointsToToggle = Set<Int>()
         
-        var currentlySelectedIds: Set<Int> = []
-        
-        // Check points against all geometries
+        // First pass: identify points that will be toggled
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
             if let pointGeometry = graphic.geometry as? AGSPoint {
-                for selectGeometry in selectedGeometries {
-                    if pointGeometry.spatialReference != selectGeometry.spatialReference {
-                        guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: selectGeometry.spatialReference!) else { continue }
-                        
-                        if AGSGeometryEngine.geometry(projectedPoint, within: selectGeometry) {
-                            graphic.isSelected = true
-                            if let id = graphic.attributes["id"] as? Int {
-                                currentlySelectedIds.insert(id)
-                            }
-                            break  // Break inner loop once point is selected
+                if pointGeometry.spatialReference != geometry.spatialReference {
+                    guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: geometry.spatialReference!) else { continue }
+                    
+                    if AGSGeometryEngine.geometry(projectedPoint, within: geometry) {
+                        if let id = graphic.attributes["id"] as? Int {
+                            pointsToToggle.insert(id)
                         }
-                    } else {
-                        if AGSGeometryEngine.geometry(pointGeometry, within: selectGeometry) {
-                            graphic.isSelected = true
-                            if let id = graphic.attributes["id"] as? Int {
-                                currentlySelectedIds.insert(id)
-                            }
-                            break  // Break inner loop once point is selected
+                    }
+                } else {
+                    if AGSGeometryEngine.geometry(pointGeometry, within: geometry) {
+                        if let id = graphic.attributes["id"] as? Int {
+                            pointsToToggle.insert(id)
                         }
                     }
                 }
             }
         }
         
-        // Update selected IDs
-        selectedPointIds = currentlySelectedIds
+        // Second pass: toggle selections
+        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
+            if let id = graphic.attributes["id"] as? Int,
+               pointsToToggle.contains(id) {
+                graphic.isSelected = !graphic.isSelected
+                
+                if graphic.isSelected {
+                    selectedPointIds.insert(id)
+                } else {
+                    selectedPointIds.remove(id)
+                }
+            }
+        }
+        
+        // Store this operation in the undo stack
+        geometrySelectionsStack.append((geometry: geometry, selectedIds: pointsToToggle))
         
         // Sort and print selected IDs
         let sortedIds = Array(selectedPointIds).sorted()
@@ -158,102 +172,95 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     }
 
     private func selectPointsNearPolyline(_ polyline: AGSPolyline) {
-        // Add buffered geometry to the list
         if let bufferedGeometry = AGSGeometryEngine.bufferGeometry(polyline, byDistance: 1.5) {
             selectedGeometries.append(bufferedGeometry)
-        }
-        
-        // Reset all selections first
-        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-            graphic.isSelected = false
-        }
-        
-        var currentlySelectedIds: Set<Int> = []
-        
-        // Check points against all geometries
-        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-            if let pointGeometry = graphic.geometry as? AGSPoint {
-                for selectGeometry in selectedGeometries {
-                    if pointGeometry.spatialReference != selectGeometry.spatialReference {
-                        guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: selectGeometry.spatialReference!) else { continue }
+            
+            var pointsToToggle = Set<Int>()
+            
+            // First pass: identify points that will be toggled
+            for graphic in pointsOverlay.graphics as! [AGSGraphic] {
+                if let pointGeometry = graphic.geometry as? AGSPoint {
+                    if pointGeometry.spatialReference != bufferedGeometry.spatialReference {
+                        guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: bufferedGeometry.spatialReference!) else { continue }
                         
-                        if AGSGeometryEngine.geometry(projectedPoint, within: selectGeometry) {
-                            graphic.isSelected = true
+                        if AGSGeometryEngine.geometry(projectedPoint, within: bufferedGeometry) {
                             if let id = graphic.attributes["id"] as? Int {
-                                currentlySelectedIds.insert(id)
+                                pointsToToggle.insert(id)
                             }
-                            break  // Break inner loop once point is selected
                         }
                     } else {
-                        if AGSGeometryEngine.geometry(pointGeometry, within: selectGeometry) {
-                            graphic.isSelected = true
+                        if AGSGeometryEngine.geometry(pointGeometry, within: bufferedGeometry) {
                             if let id = graphic.attributes["id"] as? Int {
-                                currentlySelectedIds.insert(id)
+                                pointsToToggle.insert(id)
                             }
-                            break  // Break inner loop once point is selected
                         }
                     }
                 }
             }
-        }
-        
-        // Update selected IDs
-        selectedPointIds = currentlySelectedIds
-        
-        // Sort and print selected IDs
-        let sortedIds = Array(selectedPointIds).sorted()
-        print("Total selected points: \(selectedPointIds.count)")
-        print("Selected point IDs: \(sortedIds)")
-        
-        // Update status label
-        DispatchQueue.main.async {
-            self.statusLabel.text = "Selected: \(self.selectedPointIds.count)"
-        }
-    }
-    
-    // CHANGE: Update handleUndo to clear selected geometries
-    private func handleUndo() {
-        // Remove the last graphic from shapes overlay
-        if let lastGraphic = shapesOverlay.graphics.lastObject as? AGSGraphic {
-            shapesOverlay.graphics.remove(lastGraphic)
             
-            // Remove last geometry from selectedGeometries
-            if !selectedGeometries.isEmpty {
-                selectedGeometries.removeLast()
-            }
-            
-            // Reset selection when shape is removed
+            // Second pass: toggle selections
             for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-                graphic.isSelected = false
+                if let id = graphic.attributes["id"] as? Int,
+                   pointsToToggle.contains(id) {
+                    graphic.isSelected = !graphic.isSelected
+                    
+                    if graphic.isSelected {
+                        selectedPointIds.insert(id)
+                    } else {
+                        selectedPointIds.remove(id)
+                    }
+                }
             }
             
-            // Reselect points based on remaining geometries
-            if let lastGeometry = selectedGeometries.last {
-                selectPointsInsideShape(with: lastGeometry)
-            } else {
-                selectedPointIds.removeAll()
-            }
+            // Store this operation in the undo stack
+            geometrySelectionsStack.append((geometry: bufferedGeometry, selectedIds: pointsToToggle))
             
-            // Clear the sketch editor
-            sketchEditor.stop()
-            sketchEditor.clearGeometry()
+            // Sort and print selected IDs
+            let sortedIds = Array(selectedPointIds).sorted()
+            print("Total selected points: \(selectedPointIds.count)")
+            print("Selected point IDs: \(sortedIds)")
             
-            // Clear button selection
-            selectedButton?.configuration?.background.backgroundColor = .clear
-            selectedButton = nil
-            
-            // Update status label for empty selection
-            if selectedGeometries.isEmpty {
-                statusLabel.text = "Unselected"
+            // Update status label
+            DispatchQueue.main.async {
+                self.statusLabel.text = "Selected: \(self.selectedPointIds.count)"
             }
         }
     }
+
+    private func handleUndo() {
+        guard !geometrySelectionsStack.isEmpty else { return }
+        
+        // Remove the last geometry and its selections
+        let lastEntry = geometrySelectionsStack.removeLast()
+        
+        // Remove these points from the total selection
+        selectedPointIds.subtract(lastEntry.selectedIds)
+        
+        // Update graphics selection state
+        for graphic in pointsOverlay.graphics as! [AGSGraphic] {
+            if let id = graphic.attributes["id"] as? Int {
+                graphic.isSelected = selectedPointIds.contains(id)
+            }
+        }
+        
+        // Clear any active sketch and reset mode
+        sketchEditor.stop()
+        sketchEditor.clearGeometry()
+        currentCreationMode = nil
+        shapesOverlay.graphics.removeAllObjects()
+        
+        // Clear button selection
+        selectedButton?.configuration?.background.backgroundColor = .clear
+        selectedButton = nil
+        
+        // Update status label with selected count
+        statusLabel.text = selectedPointIds.isEmpty ? "Unselected" : "Selected: \(selectedPointIds.count)"
+    }
     
-    // ADD: Touch delegate method
     func geoView(_ geoView: AGSGeoView, didTapAtScreenPoint screenPoint: CGPoint, mapPoint: AGSPoint) {
         // Get graphics near the tap location
         mapView.identify(pointsOverlay, screenPoint: screenPoint, tolerance: 12, returnPopupsOnly: false) { [weak self] result in
-            guard let self = self,
+            guard let self,
                   !result.graphics.isEmpty else { return }
             
             // Get the first graphic we tapped on
@@ -283,7 +290,6 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         }
     }
     
-    // CHANGE: Update setupNavigationBar and add removeAllButtonTapped
     private func setupNavigationBar() {
         let selectAllButton = UIBarButtonItem(image: UIImage(systemName: "checkmark.circle"),
                                             style: .plain,
@@ -298,22 +304,20 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         navigationItem.rightBarButtonItems = [selectAllButton, removeAllButton]
     }
 
-    // ADD: Remove all functionality
     @objc private func removeAllButtonTapped() {
         selectedPointIds.removeAll()
         selectedGeometries.removeAll()
+        geometrySelectionsStack.removeAll()
         
         // Deselect all points
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
             graphic.isSelected = false
         }
         
-        // Update status label
-        statusLabel.text = "Unselected"
-        
-        // Clear any active sketch
+        // Clear any active sketch and reset mode
         sketchEditor.stop()
         sketchEditor.clearGeometry()
+        currentCreationMode = nil
         
         // Clear shape overlays
         shapesOverlay.graphics.removeAllObjects()
@@ -322,13 +326,16 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         selectedButton?.configuration?.background.backgroundColor = .clear
         selectedButton = nil
         
+        // Update status label
+        statusLabel.text = "Unselected"
+        
         print("All points deselected")
     }
 
-    // ADD: Select all functionality
     @objc private func selectAllButtonTapped() {
         selectedPointIds.removeAll()
         selectedGeometries.removeAll()
+        geometrySelectionsStack.removeAll()
         
         // Select all points
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
@@ -428,7 +435,6 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         ])
     }
 
-    // Updated button creation method
     private func createButton(systemName: String, title: String) -> UIButton {
         let button = UIButton(type: .system)
         
@@ -487,7 +493,9 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         
         for (name, mode) in creationModes {
             if name == title {
-                statusLabel.text = "\(title)"
+                // Keep showing the selected points count
+                statusLabel.text = selectedPointIds.isEmpty ? "Unselected" : "Selected: \(selectedPointIds.count)"
+                currentCreationMode = mode
                 sketchEditor.start(with: nil, creationMode: mode)
                 break
             }
@@ -512,7 +520,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             pointsOverlay.graphics.add(initialGraphic)
             
             // Generate 48 more random points around the initial point and add them to the overlay
-            for i in 1..<49 { // Start from 1 since center point is 0
+            for i in 1..<50 { // Start from 1 since center point is 0
                 let randomX = centerPoint.x + Double.random(in: -0.01...0.01)  // This creates points within ~1km radius
                 let randomY = centerPoint.y + Double.random(in: -0.01...0.01)
                 let randomPoint = AGSPoint(x: randomX, y: randomY, spatialReference: .wgs84())

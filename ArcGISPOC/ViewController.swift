@@ -19,6 +19,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     private var selectedGeometries: [AGSGeometry] = []
     private var geometrySelectionsStack: [(geometry: AGSGeometry, selectedIds: Set<Int>)] = []
     private var currentCreationMode: AGSSketchCreationMode?
+    private var cgiPointIds: Set<Int> = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -117,27 +118,26 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     }
 
     private func selectPointsInsideShape(with geometry: AGSGeometry) {
-        // Add new geometry to the list
         selectedGeometries.append(geometry)
         
         var pointsToToggle = Set<Int>()
         
         // First pass: identify points that will be toggled
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-            if let pointGeometry = graphic.geometry as? AGSPoint {
+            if let pointGeometry = graphic.geometry as? AGSPoint,
+               let id = graphic.attributes["id"] as? Int {
+                // Skip CGI points
+                if cgiPointIds.contains(id) { continue }
+                
                 if pointGeometry.spatialReference != geometry.spatialReference {
                     guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: geometry.spatialReference!) else { continue }
                     
                     if AGSGeometryEngine.geometry(projectedPoint, within: geometry) {
-                        if let id = graphic.attributes["id"] as? Int {
-                            pointsToToggle.insert(id)
-                        }
+                        pointsToToggle.insert(id)
                     }
                 } else {
                     if AGSGeometryEngine.geometry(pointGeometry, within: geometry) {
-                        if let id = graphic.attributes["id"] as? Int {
-                            pointsToToggle.insert(id)
-                        }
+                        pointsToToggle.insert(id)
                     }
                 }
             }
@@ -179,20 +179,20 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             
             // First pass: identify points that will be toggled
             for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-                if let pointGeometry = graphic.geometry as? AGSPoint {
+                if let pointGeometry = graphic.geometry as? AGSPoint,
+                   let id = graphic.attributes["id"] as? Int {
+                    // Skip CGI points
+                    if cgiPointIds.contains(id) { continue }
+                    
                     if pointGeometry.spatialReference != bufferedGeometry.spatialReference {
                         guard let projectedPoint = AGSGeometryEngine.projectGeometry(pointGeometry, to: bufferedGeometry.spatialReference!) else { continue }
                         
                         if AGSGeometryEngine.geometry(projectedPoint, within: bufferedGeometry) {
-                            if let id = graphic.attributes["id"] as? Int {
-                                pointsToToggle.insert(id)
-                            }
+                            pointsToToggle.insert(id)
                         }
                     } else {
                         if AGSGeometryEngine.geometry(pointGeometry, within: bufferedGeometry) {
-                            if let id = graphic.attributes["id"] as? Int {
-                                pointsToToggle.insert(id)
-                            }
+                            pointsToToggle.insert(id)
                         }
                     }
                 }
@@ -258,34 +258,78 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     }
     
     func geoView(_ geoView: AGSGeoView, didTapAtScreenPoint screenPoint: CGPoint, mapPoint: AGSPoint) {
-        // Get graphics near the tap location
         mapView.identify(pointsOverlay, screenPoint: screenPoint, tolerance: 12, returnPopupsOnly: false) { [weak self] result in
             guard let self,
-                  !result.graphics.isEmpty else { return }
+                  !result.graphics.isEmpty,
+                  let graphic = result.graphics.first,
+                  let id = graphic.attributes["id"] as? Int else { return }
             
-            // Get the first graphic we tapped on
-            if let graphic = result.graphics.first {
-                // Toggle selection state
+            // If it's a CGI point, show message and return
+            if self.cgiPointIds.contains(id) {
+                DispatchQueue.main.async {
+                    let alert = UIAlertController(title: "CGI Point", message: "This point is marked as CGI and cannot be selected.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
+                }
+                return
+            }
+            
+            let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
+            let isSelected = graphic.isSelected
+            
+            // Add "Select/Deselect" action
+            let selectAction = UIAlertAction(title: isSelected ? "Deselect" : "Select", style: .default) { [weak self] _ in
+                guard let self = self else { return }
+                
                 graphic.isSelected = !graphic.isSelected
                 
-                // Update selectedPointIds set
-                if let id = graphic.attributes["id"] as? Int {
-                    if graphic.isSelected {
-                        self.selectedPointIds.insert(id)
-                    } else {
-                        self.selectedPointIds.remove(id)
-                    }
+                if graphic.isSelected {
+                    self.selectedPointIds.insert(id)
+                } else {
+                    self.selectedPointIds.remove(id)
                 }
                 
-                // Update status label
-                DispatchQueue.main.async {
-                    self.statusLabel.text = "Selected: \(self.selectedPointIds.count)"
-                }
+                self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
                 
-                // Print current selection
                 let sortedIds = Array(self.selectedPointIds).sorted()
                 print("Total selected points: \(self.selectedPointIds.count)")
                 print("Selected point IDs: \(sortedIds)")
+            }
+            
+            // Add "CGI" action
+            let cgiAction = UIAlertAction(title: "CGI", style: .default) { [weak self] _ in
+                guard let self = self else { return }
+                
+                // Add to CGI points
+                self.cgiPointIds.insert(id)
+                
+                // If point was selected, deselect it
+                if graphic.isSelected {
+                    graphic.isSelected = false
+                    self.selectedPointIds.remove(id)
+                    self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
+                }
+                
+                // Change point appearance to indicate CGI status
+                if let oldSymbol = graphic.symbol as? AGSPictureMarkerSymbol,
+                   let image = oldSymbol.image {
+                    let newSymbol = AGSPictureMarkerSymbol(image: image.withTintColor(.gray))
+                    newSymbol.width = oldSymbol.width
+                    newSymbol.height = oldSymbol.height
+                    graphic.symbol = newSymbol
+                }
+                
+                print("Point \(id) marked as CGI")
+            }
+            
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+            
+            alertController.addAction(selectAction)
+            alertController.addAction(cgiAction)
+            alertController.addAction(cancelAction)
+            
+            DispatchQueue.main.async {
+                self.present(alertController, animated: true)
             }
         }
     }
@@ -309,27 +353,25 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         selectedGeometries.removeAll()
         geometrySelectionsStack.removeAll()
         
-        // Deselect all points
+        // Deselect all non-CGI points
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
-            graphic.isSelected = false
+            if let id = graphic.attributes["id"] as? Int,
+               !cgiPointIds.contains(id) {
+                graphic.isSelected = false
+            }
         }
         
         // Clear any active sketch and reset mode
         sketchEditor.stop()
         sketchEditor.clearGeometry()
         currentCreationMode = nil
-        
-        // Clear shape overlays
         shapesOverlay.graphics.removeAllObjects()
         
         // Clear button selection
         selectedButton?.configuration?.background.backgroundColor = .clear
         selectedButton = nil
         
-        // Update status label
         statusLabel.text = "Unselected"
-        
-        print("All points deselected")
     }
 
     @objc private func selectAllButtonTapped() {

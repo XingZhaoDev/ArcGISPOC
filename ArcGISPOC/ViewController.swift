@@ -11,7 +11,7 @@ import ArcGIS
 class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     let pointsOverlay = AGSGraphicsOverlay() // For points
     let shapesOverlay = AGSGraphicsOverlay() // For shapes
-    let sketchEditor = AGSSketchEditor()
+    var sketchEditor = AGSSketchEditor()
     var barItemObserver: NSObjectProtocol!
     private var lastAddedGraphic: AGSGraphic?
     private var selectedButton: UIButton?
@@ -24,6 +24,26 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Create sketch style
+        let sketchStyle = AGSSketchStyle()
+
+        // 设置正在绘制的线为蓝色虚线
+        let lineSymbol = AGSSimpleLineSymbol(style: .dash, color: .orange, width: 2)
+        sketchStyle.lineSymbol = lineSymbol
+
+        // 设置完成后的填充颜色（矩形等面图形）
+        let fillSymbol = AGSSimpleFillSymbol(style: .solid,
+                                              color: UIColor.orange.withAlphaComponent(0.3),
+                                              outline: lineSymbol)
+        sketchStyle.fillSymbol = fillSymbol
+
+        // 设置节点的样式（点）
+        sketchStyle.vertexSymbol = AGSSimpleMarkerSymbol(style: .circle, color: .orange, size: 10)
+        sketchStyle.selectedVertexSymbol = AGSSimpleMarkerSymbol(style: .diamond, color: .red, size: 12)
+
+        // 应用样式
+        sketchEditor.style = sketchStyle
+        
         view.backgroundColor = .systemBackground
         
         // Configure navigation bar appearance
@@ -34,6 +54,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             navigationController?.navigationBar.scrollEdgeAppearance = appearance
             navigationController?.navigationBar.compactAppearance = appearance
         }
+        
         navigationController?.setNavigationBarHidden(false, animated: false)
         navigationItem.title = "Map Selection"  // Optional: add a title
         
@@ -148,6 +169,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             if let id = graphic.attributes["id"] as? Int,
                pointsToToggle.contains(id) {
                 graphic.isSelected = !graphic.isSelected
+                updatePointAppearance(graphic: graphic, isSelected: graphic.isSelected)
                 
                 if graphic.isSelected {
                     selectedPointIds.insert(id)
@@ -172,7 +194,8 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     }
 
     private func selectPointsNearPolyline(_ polyline: AGSPolyline) {
-        if let bufferedGeometry = AGSGeometryEngine.bufferGeometry(polyline, byDistance: 1.5) {
+        // CHANGE: Increase buffer distance from 1.5 to 5.0 for better point selection
+        if let bufferedGeometry = AGSGeometryEngine.bufferGeometry(polyline, byDistance: 50.0) {
             selectedGeometries.append(bufferedGeometry)
             
             var pointsToToggle = Set<Int>()
@@ -203,6 +226,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
                 if let id = graphic.attributes["id"] as? Int,
                    pointsToToggle.contains(id) {
                     graphic.isSelected = !graphic.isSelected
+                    updatePointAppearance(graphic: graphic, isSelected: graphic.isSelected)
                     
                     if graphic.isSelected {
                         selectedPointIds.insert(id)
@@ -240,6 +264,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
             if let id = graphic.attributes["id"] as? Int {
                 graphic.isSelected = selectedPointIds.contains(id)
+                updatePointAppearance(graphic: graphic, isSelected: graphic.isSelected)
             }
         }
         
@@ -257,6 +282,17 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         statusLabel.text = selectedPointIds.isEmpty ? "Unselected" : "Selected: \(selectedPointIds.count)"
     }
     
+    private func updatePointAppearance(graphic: AGSGraphic, isSelected: Bool) {
+        if let oldSymbol = graphic.symbol as? AGSPictureMarkerSymbol,
+           let image = oldSymbol.image {
+            let color: UIColor = isSelected ? .systemBlue : .black
+            let newSymbol = AGSPictureMarkerSymbol(image: image.withTintColor(color))
+            newSymbol.width = oldSymbol.width
+            newSymbol.height = oldSymbol.height
+            graphic.symbol = newSymbol
+        }
+    }
+    
     func geoView(_ geoView: AGSGeoView, didTapAtScreenPoint screenPoint: CGPoint, mapPoint: AGSPoint) {
         mapView.identify(pointsOverlay, screenPoint: screenPoint, tolerance: 12, returnPopupsOnly: false) { [weak self] result in
             guard let self,
@@ -264,62 +300,73 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
                   let graphic = result.graphics.first,
                   let id = graphic.attributes["id"] as? Int else { return }
             
-            // If it's a CGI point, show message and return
-            if self.cgiPointIds.contains(id) {
-                DispatchQueue.main.async {
-                    let alert = UIAlertController(title: "CGI Point", message: "This point is marked as CGI and cannot be selected.", preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self.present(alert, animated: true)
-                }
-                return
-            }
-            
             let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
             let isSelected = graphic.isSelected
+            let isCGI = self.cgiPointIds.contains(id)
             
             // Add "Select/Deselect" action
             let selectAction = UIAlertAction(title: isSelected ? "Deselect" : "Select", style: .default) { [weak self] _ in
                 guard let self = self else { return }
                 
-                graphic.isSelected = !graphic.isSelected
-                
-                if graphic.isSelected {
-                    self.selectedPointIds.insert(id)
-                } else {
-                    self.selectedPointIds.remove(id)
+                // Only allow selection if not CGI
+                if !self.cgiPointIds.contains(id) {
+                    graphic.isSelected = !graphic.isSelected
+                    self.updatePointAppearance(graphic: graphic, isSelected: !isSelected)
+                    
+                    if graphic.isSelected {
+                        self.selectedPointIds.insert(id)
+                    } else {
+                        self.selectedPointIds.remove(id)
+                    }
+                    
+                    self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
+                    
+                    let sortedIds = Array(self.selectedPointIds).sorted()
+                    print("Total selected points: \(self.selectedPointIds.count)")
+                    print("Selected point IDs: \(sortedIds)")
                 }
-                
-                self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
-                
-                let sortedIds = Array(self.selectedPointIds).sorted()
-                print("Total selected points: \(self.selectedPointIds.count)")
-                print("Selected point IDs: \(sortedIds)")
             }
             
-            // Add "CGI" action
-            let cgiAction = UIAlertAction(title: "CGI", style: .default) { [weak self] _ in
+            // Add "CGI/Cancel CGI" action
+            let cgiAction = UIAlertAction(title: isCGI ? "Cancel CGI" : "CGI", style: .default) { [weak self] _ in
                 guard let self = self else { return }
                 
-                // Add to CGI points
-                self.cgiPointIds.insert(id)
-                
-                // If point was selected, deselect it
-                if graphic.isSelected {
-                    graphic.isSelected = false
-                    self.selectedPointIds.remove(id)
-                    self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
+                if isCGI {
+                    // Remove CGI status
+                    self.cgiPointIds.remove(id)
+                    
+                    // Restore original appearance
+                    if let oldSymbol = graphic.symbol as? AGSPictureMarkerSymbol,
+                       let image = oldSymbol.image {
+                        let newSymbol = AGSPictureMarkerSymbol(image: image.withTintColor(.black))
+                        newSymbol.width = oldSymbol.width
+                        newSymbol.height = oldSymbol.height
+                        graphic.symbol = newSymbol
+                    }
+                    
+                    print("Removed CGI status from point \(id)")
+                } else {
+                    // Add CGI status
+                    self.cgiPointIds.insert(id)
+                    
+                    // If point was selected, deselect it
+                    if graphic.isSelected {
+                        graphic.isSelected = false
+                        self.selectedPointIds.remove(id)
+                        self.statusLabel.text = self.selectedPointIds.isEmpty ? "Unselected" : "Selected: \(self.selectedPointIds.count)"
+                    }
+                    
+                    // Change point appearance for CGI
+                    if let oldSymbol = graphic.symbol as? AGSPictureMarkerSymbol,
+                       let image = oldSymbol.image {
+                        let newSymbol = AGSPictureMarkerSymbol(image: image.withTintColor(.gray))
+                        newSymbol.width = oldSymbol.width
+                        newSymbol.height = oldSymbol.height
+                        graphic.symbol = newSymbol
+                    }
+                    
+                    print("Point \(id) marked as CGI")
                 }
-                
-                // Change point appearance to indicate CGI status
-                if let oldSymbol = graphic.symbol as? AGSPictureMarkerSymbol,
-                   let image = oldSymbol.image {
-                    let newSymbol = AGSPictureMarkerSymbol(image: image.withTintColor(.gray))
-                    newSymbol.width = oldSymbol.width
-                    newSymbol.height = oldSymbol.height
-                    graphic.symbol = newSymbol
-                }
-                
-                print("Point \(id) marked as CGI")
             }
             
             let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -333,7 +380,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             }
         }
     }
-    
+
     private func setupNavigationBar() {
         let selectAllButton = UIBarButtonItem(image: UIImage(systemName: "checkmark.circle"),
                                             style: .plain,
@@ -358,6 +405,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             if let id = graphic.attributes["id"] as? Int,
                !cgiPointIds.contains(id) {
                 graphic.isSelected = false
+                updatePointAppearance(graphic: graphic, isSelected: false)
             }
         }
         
@@ -382,6 +430,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         // Select all points
         for graphic in pointsOverlay.graphics as! [AGSGraphic] {
             graphic.isSelected = true
+            updatePointAppearance(graphic: graphic, isSelected: true)
             if let id = graphic.attributes["id"] as? Int {
                 selectedPointIds.insert(id)
             }
@@ -538,7 +587,24 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
                 // Keep showing the selected points count
                 statusLabel.text = selectedPointIds.isEmpty ? "Unselected" : "Selected: \(selectedPointIds.count)"
                 currentCreationMode = mode
+                
+                // Create sketch style with vertex indicators
+                let lineSymbol = AGSSimpleLineSymbol(style: .solid, color: .orange, width: 2)
+                let fillSymbol = AGSSimpleFillSymbol(style: .solid,
+                                                    color: UIColor.orange.withAlphaComponent(0.3),
+                                                    outline: lineSymbol)
+                
+                // Add vertex symbols to show interaction points
+                let sketchStyle = AGSSketchStyle()
+                sketchStyle.lineSymbol = lineSymbol
+                sketchStyle.fillSymbol = fillSymbol
+                // Add vertex symbols to show the center point and edge points
+                sketchStyle.vertexSymbol = AGSSimpleMarkerSymbol(style: .circle, color: .orange, size: 10)
+                sketchStyle.selectedVertexSymbol = AGSSimpleMarkerSymbol(style: .diamond, color: .red, size: 12)
+                
+                // Start sketching
                 sketchEditor.start(with: nil, creationMode: mode)
+                sketchEditor.style = sketchStyle
                 break
             }
         }

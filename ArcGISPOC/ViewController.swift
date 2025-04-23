@@ -64,10 +64,11 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         view.addSubview(mapView)
         mapView.backgroundColor = .systemBackground
         
+        // Set initial viewpoint with 0 rotation
         mapView.setViewpoint(AGSViewpoint(
-            center: AGSPoint(x: -123.1207, y: 49.2827, spatialReference: .wgs84()), // Vancouver coordinates
-            scale: 25000  // City level zoom
-            // 25000 neighbourhood level
+            center: AGSPoint(x: -123.1207, y: 49.2827, spatialReference: .wgs84()),
+            scale: 25000,
+            rotation: 0  // Ensure map starts without rotation
         ))
         
         // Add both graphics overlays to the map view

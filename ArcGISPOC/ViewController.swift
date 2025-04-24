@@ -9,8 +9,8 @@ import UIKit
 import ArcGIS
 
 class ViewController: UIViewController, AGSGeoViewTouchDelegate {
-    let pointsOverlay = AGSGraphicsOverlay() // For points
-    let shapesOverlay = AGSGraphicsOverlay() // For shapes
+    var pointsOverlay = AGSGraphicsOverlay() // For points
+    var shapesOverlay = AGSGraphicsOverlay() // For shapes
     var sketchEditor = AGSSketchEditor()
     var barItemObserver: NSObjectProtocol!
     private var lastAddedGraphic: AGSGraphic?
@@ -20,41 +20,19 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
     private var geometrySelectionsStack: [(geometry: AGSGeometry, selectedIds: Set<Int>)] = []
     private var currentCreationMode: AGSSketchCreationMode?
     private var cgiPointIds: Set<Int> = []
+    private var panGestureRecognizer: UIPanGestureRecognizer?
+    private var startPoint: AGSPoint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Create sketch style
-        let sketchStyle = AGSSketchStyle()
-
-        // 设置正在绘制的线为蓝色虚线
-        let lineSymbol = AGSSimpleLineSymbol(style: .dash, color: .orange, width: 2)
-        sketchStyle.lineSymbol = lineSymbol
-
-        // 设置完成后的填充颜色（矩形等面图形）
-        let fillSymbol = AGSSimpleFillSymbol(style: .solid,
-                                              color: UIColor.orange.withAlphaComponent(0.3),
-                                              outline: lineSymbol)
-        sketchStyle.fillSymbol = fillSymbol
-
-        // 设置节点的样式（点）
-        sketchStyle.vertexSymbol = AGSSimpleMarkerSymbol(style: .circle, color: .orange, size: 10)
-        sketchStyle.selectedVertexSymbol = AGSSimpleMarkerSymbol(style: .diamond, color: .red, size: 12)
-
-        // 应用样式
-        sketchEditor.style = sketchStyle
-        
         view.backgroundColor = .systemBackground
         
-        // Configure navigation bar appearance
-        if #available(iOS 13.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithDefaultBackground()
-            navigationController?.navigationBar.standardAppearance = appearance
-            navigationController?.navigationBar.scrollEdgeAppearance = appearance
-            navigationController?.navigationBar.compactAppearance = appearance
-        }
-        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
         navigationController?.setNavigationBarHidden(false, animated: false)
         navigationItem.title = "Map Selection"  // Optional: add a title
         
@@ -71,8 +49,16 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             rotation: 0  // Ensure map starts without rotation
         ))
         
-        // Add both graphics overlays to the map view
-        mapView.graphicsOverlays.addObjects(from: [pointsOverlay, shapesOverlay])
+        // Clear and reinitialize graphics overlays
+        mapView.graphicsOverlays.removeAllObjects()
+        
+        // Initialize instance variables properly
+        self.pointsOverlay.opacity = 1.0
+        self.shapesOverlay.opacity = 1.0
+        self.shapesOverlay.isVisible = true
+        
+        // Add overlays to map using instance variables
+        mapView.graphicsOverlays.addObjects(from: [self.pointsOverlay, self.shapesOverlay])
         
         // Set the touch delegate
         mapView.touchDelegate = self
@@ -96,6 +82,8 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         barItemObserver = NotificationCenter.default.addObserver(forName: .AGSSketchEditorGeometryDidChange, object: sketchEditor, queue: nil, using: { [unowned self] _ in
             self.handleSketchEditorChange()
         })
+        
+        setupPanGesture()
         
         setupBottomBar()
         
@@ -393,7 +381,12 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
                                             target: self,
                                             action: #selector(removeAllButtonTapped))
         
-        navigationItem.rightBarButtonItems = [selectAllButton, removeAllButton]
+        let demoButton = UIBarButtonItem(image: UIImage(systemName: "arrow.right.circle"),
+                                       style: .plain,
+                                       target: self,
+                                       action: #selector(demoButtonTapped))
+        
+        navigationItem.rightBarButtonItems = [selectAllButton, removeAllButton, demoButton]
     }
 
     @objc private func removeAllButtonTapped() {
@@ -457,6 +450,11 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         selectedButton = nil
     }
     
+    @objc private func demoButtonTapped() {
+        let demoVC = DemoViewController()
+        navigationController?.pushViewController(demoVC, animated: true)
+    }
+    
     lazy var statusLabel: UILabel = {
         let label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -472,6 +470,137 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         mapView.sketchEditor = sketchEditor
         return mapView
     }()
+
+    private func setupPanGesture() {
+        panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
+        panGestureRecognizer?.isEnabled = false
+        if let panGesture = panGestureRecognizer {
+            mapView.addGestureRecognizer(panGesture)
+        }
+    }
+
+    @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
+        let location = gesture.location(in: mapView)
+        let mapPoint = mapView.screen(toLocation: location)
+        print("handle pan gesture \(mapPoint)")
+        
+        switch gesture.state {
+        case .began:
+            startPoint = mapPoint
+            self.shapesOverlay.graphics.removeAllObjects() // Clear previous shapes
+            mapView.interactionOptions.isPanEnabled = false
+            print("Pan began at: \(mapPoint.x), \(mapPoint.y)")
+            
+        case .changed:
+            guard let start = startPoint else { return }
+            print("Pan changed to: \(mapPoint.x), \(mapPoint.y)")
+            
+            let minX = min(start.x, mapPoint.x)
+            let maxX = max(start.x, mapPoint.x)
+            let minY = min(start.y, mapPoint.y)
+            let maxY = max(start.y, mapPoint.y)
+            
+            // Create polygon for visualization
+            let polygonBuilder = AGSPolygonBuilder(spatialReference: .wgs84())
+            polygonBuilder.addPointWith(x: minX, y: minY)
+            polygonBuilder.addPointWith(x: maxX, y: minY)
+            polygonBuilder.addPointWith(x: maxX, y: maxY)
+            polygonBuilder.addPointWith(x: minX, y: maxY)
+            polygonBuilder.addPointWith(x: minX, y: minY)
+            
+            let geometry = polygonBuilder.toGeometry()
+            
+            // Clear previous shape and add new one
+            self.shapesOverlay.graphics.removeAllObjects()
+            
+            // Create a highly visible fill symbol for rectangle
+            let lineSymbol = AGSSimpleLineSymbol(style: .solid, color: .red, width: 4)
+            let fillSymbol = AGSSimpleFillSymbol(
+                style: .solid,
+                color: UIColor.blue.withAlphaComponent(0.5),
+                outline: lineSymbol
+            )
+            
+            let graphic = AGSGraphic(geometry: geometry, symbol: fillSymbol)
+            self.shapesOverlay.graphics.add(graphic)
+            print("Added graphic to overlay. Graphics count: \(self.shapesOverlay.graphics.count)")
+            
+        case .ended:
+            mapView.interactionOptions.isPanEnabled = true
+            
+            guard let start = startPoint else { return }
+            let builder = AGSPolygonBuilder(spatialReference: .wgs84())
+            let minX = min(start.x, mapPoint.x)
+            let maxX = max(start.x, mapPoint.x)
+            let minY = min(start.y, mapPoint.y)
+            let maxY = max(start.y, mapPoint.y)
+            
+            builder.addPointWith(x: minX, y: minY)
+            builder.addPointWith(x: maxX, y: minY)
+            builder.addPointWith(x: maxX, y: maxY)
+            builder.addPointWith(x: minX, y: maxY)
+            builder.addPointWith(x: minX, y: minY)
+            
+            let geometry = builder.toGeometry()
+            print("Pan ended with geometry: \(geometry)")
+            selectPointsInsideShape(with: geometry)
+            self.shapesOverlay.graphics.removeAllObjects()
+            startPoint = nil
+            print("Pan ended")
+            
+        default:
+            break
+        }
+    }
+
+    @objc private func bottomBarButtonTapped(_ sender: UIButton) {
+        guard let title = sender.accessibilityIdentifier else { return }
+        print("\(title) button tapped")
+        
+        // Unhighlight previous button
+        selectedButton?.configuration?.background.backgroundColor = .clear
+        
+        // Handle undo differently - don't highlight it
+        if title == "Undo" {
+            handleUndo()
+            return
+        }
+        
+        // Enable/disable pan gesture based on rectangle mode
+        panGestureRecognizer?.isEnabled = (title == "Rectangle")
+        
+        // Ensure map panning is enabled when switching away from rectangle mode
+        if title != "Rectangle" {
+            mapView.interactionOptions.isPanEnabled = true
+        }
+        
+        // Highlight current button
+        sender.configuration?.background.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
+        selectedButton = sender
+        
+        // Only set creation mode for non-rectangle tools
+        if title != "Rectangle" {
+            let creationModes: KeyValuePairs = [
+                "Arrow": AGSSketchCreationMode.arrow,
+                "Ellipse": .ellipse,
+                "Lasso": .freehandPolygon,
+                "FreehandPolyline": .freehandPolyline,
+                "Multipoint": .multipoint,
+                "Point": .point,
+                "Polygon": .polygon,
+                "Line": .freehandPolyline,
+                "Triangle": .triangle
+            ]
+            
+            for (name, mode) in creationModes {
+                if name == title {
+                    currentCreationMode = mode
+                    sketchEditor.start(with: nil, creationMode: mode)
+                    break
+                }
+            }
+        }
+    }
 
     private func setupBottomBar() {
         let bottomBar = UIStackView()
@@ -551,64 +680,6 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
         button.accessibilityIdentifier = title
         
         return button
-    }
-
-    @objc private func bottomBarButtonTapped(_ sender: UIButton) {
-        guard let title = sender.accessibilityIdentifier else { return }
-        print("\(title) button tapped")
-        
-        // Unhighlight previous button
-        selectedButton?.configuration?.background.backgroundColor = .clear
-        
-        // Handle undo differently - don't highlight it
-        if title == "Undo" {
-            handleUndo()
-            return
-        }
-        
-        // Highlight current button
-        sender.configuration?.background.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3)
-        selectedButton = sender
-        
-        let creationModes: KeyValuePairs = [
-            "Arrow": AGSSketchCreationMode.arrow,
-            "Ellipse": .ellipse,
-            "Lasso": .freehandPolygon,
-            "FreehandPolyline": .freehandPolyline,
-            "Multipoint": .multipoint,
-            "Point": .point,
-            "Polygon": .polygon,
-            "Line": .freehandPolyline,
-            "Rectangle": .rectangle,
-            "Triangle": .triangle
-        ]
-        
-        for (name, mode) in creationModes {
-            if name == title {
-                // Keep showing the selected points count
-                statusLabel.text = selectedPointIds.isEmpty ? "Unselected" : "Selected: \(selectedPointIds.count)"
-                currentCreationMode = mode
-                
-                // Create sketch style with vertex indicators
-                let lineSymbol = AGSSimpleLineSymbol(style: .solid, color: .orange, width: 2)
-                let fillSymbol = AGSSimpleFillSymbol(style: .solid,
-                                                    color: UIColor.orange.withAlphaComponent(0.3),
-                                                    outline: lineSymbol)
-                
-                // Add vertex symbols to show interaction points
-                let sketchStyle = AGSSketchStyle()
-                sketchStyle.lineSymbol = lineSymbol
-                sketchStyle.fillSymbol = fillSymbol
-                // Add vertex symbols to show the center point and edge points
-                sketchStyle.vertexSymbol = AGSSimpleMarkerSymbol(style: .circle, color: .orange, size: 10)
-                sketchStyle.selectedVertexSymbol = AGSSimpleMarkerSymbol(style: .diamond, color: .red, size: 12)
-                
-                // Start sketching
-                sketchEditor.start(with: nil, creationMode: mode)
-                sketchEditor.style = sketchStyle
-                break
-            }
-        }
     }
 
     private func hasSavedPoints() -> Bool {

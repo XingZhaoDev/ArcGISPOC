@@ -2,21 +2,12 @@ import UIKit
 import ArcGIS
 
 class DemoViewController: UIViewController {
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Demo View Controller"
-        label.textAlignment = .center
-        label.font = .systemFont(ofSize: 20, weight: .bold)
-        return label
-    }()
-    
-    var rectangleGraphic: AGSGraphic?
     private var pointsOverlay = AGSGraphicsOverlay()
     private var drawingOverlay = AGSGraphicsOverlay()
     private var startPoint: CGPoint?
     private var panGestureRecognizer: UIPanGestureRecognizer?
     private var isDrawingEnabled = false
+    var rectangleGraphic: AGSGraphic?
     
     private lazy var mapView: AGSMapView = {
         let mapView = AGSMapView()
@@ -94,115 +85,64 @@ class DemoViewController: UIViewController {
         }
     }
     
-    /*@objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-        let location = gesture.location(in: mapView)
+    @objc func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
+        let currentPoint = gesture.location(in: mapView)
         
         switch gesture.state {
         case .began:
-            startPoint = location
-            drawingOverlay.graphics.removeAllObjects()
-            print("Pan began at screen point: \(location)")
-            
+            startPoint = currentPoint
+            removeExistingRectangle()
         case .changed:
-            guard let start = startPoint else { return }
-            print("Pan changed to screen point: \(location)")
-            
-            // Convert screen points to map points
-            let startMapPoint = mapView.screen(toLocation: start)
-            let currentMapPoint = mapView.screen(toLocation: location)
-            
-            let minX = min(startMapPoint.x, currentMapPoint.x)
-            let maxX = max(startMapPoint.x, currentMapPoint.x)
-            let minY = min(startMapPoint.y, currentMapPoint.y)
-            let maxY = max(startMapPoint.y, currentMapPoint.y)
-            
-            let polygon = AGSPolygonBuilder(spatialReference: .wgs84())
-            polygon.addPointWith(x: minX, y: minY)
-            polygon.addPointWith(x: maxX, y: minY)
-            polygon.addPointWith(x: maxX, y: maxY)
-            polygon.addPointWith(x: minX, y: maxY)
-            polygon.addPointWith(x: minX, y: minY)
-            
-            drawingOverlay.graphics.removeAllObjects()
-            
-            let lineSymbol = AGSSimpleLineSymbol(style: .solid, color: .red, width: 2)
-            let fillSymbol = AGSSimpleFillSymbol(
-                style: .solid,
-                color: UIColor.blue.withAlphaComponent(0.3),
-                outline: lineSymbol
-            )
-            
-            let graphic = AGSGraphic(geometry: polygon.toGeometry(), symbol: fillSymbol)
-            drawingOverlay.graphics.add(graphic)
-            print("Added rectangle: \(minX),\(minY) to \(maxX),\(maxY)")
-            
-        case .ended:
-            print("Pan ended")
-            break
-            
+            if let startPoint {
+                drawRectangle(from: startPoint, to: currentPoint)
+            }
+        case .ended, .cancelled:
+            startPoint = nil
         default:
             break
         }
-    }*/
-    
-    @objc func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-           let currentPoint = gesture.location(in: mapView)
-           
-           switch gesture.state {
-           case .began:
-               startPoint = currentPoint
-               removeExistingRectangle()
-           case .changed:
-               if let startPoint {
-                   drawRectangle(from: startPoint, to: currentPoint)
-               }
-           case .ended, .cancelled:
-               startPoint = nil
-           default:
-               break
-           }
-       }
+    }
 
-       func drawRectangle(from p1: CGPoint, to p2: CGPoint) {
-           let mapPoint1 = mapView.screen(toLocation: p1)
-            let mapPoint2 = mapView.screen(toLocation: p2)
+    func drawRectangle(from p1: CGPoint, to p2: CGPoint) {
+        let mapPoint1 = mapView.screen(toLocation: p1)
+        let mapPoint2 = mapView.screen(toLocation: p2)
 
-           // Define all 4 corners based on bounding box
-           let minX = min(mapPoint1.x, mapPoint2.x)
-           let maxX = max(mapPoint1.x, mapPoint2.x)
-           let minY = min(mapPoint1.y, mapPoint2.y)
-           let maxY = max(mapPoint1.y, mapPoint2.y)
+        // Define all 4 corners based on bounding box
+        let minX = min(mapPoint1.x, mapPoint2.x)
+        let maxX = max(mapPoint1.x, mapPoint2.x)
+        let minY = min(mapPoint1.y, mapPoint2.y)
+        let maxY = max(mapPoint1.y, mapPoint2.y)
 
-           let builder = AGSPolygonBuilder(spatialReference: mapPoint1.spatialReference)
+        let builder = AGSPolygonBuilder(spatialReference: mapPoint1.spatialReference)
 
-           builder.addPointWith(x: minX, y: minY) // bottom-left
-           builder.addPointWith(x: minX, y: maxY) // top-left
-           builder.addPointWith(x: maxX, y: maxY) // top-right
-           builder.addPointWith(x: maxX, y: minY) // bottom-right
-           builder.addPointWith(x: minX, y: minY) // close polygon
+        builder.addPointWith(x: minX, y: minY) // bottom-left
+        builder.addPointWith(x: minX, y: maxY) // top-left
+        builder.addPointWith(x: maxX, y: maxY) // top-right
+        builder.addPointWith(x: maxX, y: minY) // bottom-right
+        builder.addPointWith(x: minX, y: minY) // close polygon
 
-           let polygon = builder.toGeometry()
-           let fillSymbol = AGSSimpleFillSymbol(
-               style: .solid,
-               color: UIColor.blue.withAlphaComponent(0.3),
-               outline: AGSSimpleLineSymbol(style: .dash, color: .orange, width: 1)
-           )
+        let polygon = builder.toGeometry()
+        let fillSymbol = AGSSimpleFillSymbol(
+            style: .solid,
+            color: UIColor.blue.withAlphaComponent(0.3),
+            outline: AGSSimpleLineSymbol(style: .dash, color: .orange, width: 1)
+        )
 
-           if let rectangleGraphic {
-               rectangleGraphic.geometry = polygon
-           } else {
-               let graphic = AGSGraphic(geometry: polygon, symbol: fillSymbol)
-               drawingOverlay.graphics.add(graphic)
-               rectangleGraphic = graphic
-           }
-       }
+        if let existing = rectangleGraphic {
+            existing.geometry = polygon
+        } else {
+            let graphic = AGSGraphic(geometry: polygon, symbol: fillSymbol)
+            drawingOverlay.graphics.add(graphic)
+            rectangleGraphic = graphic
+        }
+    }
 
-       func removeExistingRectangle() {
-           if let graphic = rectangleGraphic {
-               drawingOverlay.graphics.remove(graphic)
-               rectangleGraphic = nil
-           }
-       }
+    func removeExistingRectangle() {
+        if let graphic = rectangleGraphic {
+            drawingOverlay.graphics.remove(graphic)
+            rectangleGraphic = nil
+        }
+    }
     
     private func loadSavedPoints() {
         guard let jsonData = UserDefaults.standard.data(forKey: "savedPoints") else { return }

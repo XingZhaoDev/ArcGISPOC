@@ -19,7 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = UIWindow(windowScene: windowScene)
         
         // Create main view controller and embed in navigation controller
-        let viewController = DemoViewController()
+        let viewController = ViewController()
         let navigationController = UINavigationController(rootViewController: viewController)
         
         // Set navigation controller as root

@@ -501,7 +501,7 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             let maxY = max(start.y, mapPoint.y)
             
             // Create polygon for visualization
-            let polygonBuilder = AGSPolygonBuilder(spatialReference: .wgs84())
+            let polygonBuilder = AGSPolygonBuilder(spatialReference: start.spatialReference)
             polygonBuilder.addPointWith(x: minX, y: minY)
             polygonBuilder.addPointWith(x: maxX, y: minY)
             polygonBuilder.addPointWith(x: maxX, y: maxY)
@@ -514,40 +514,20 @@ class ViewController: UIViewController, AGSGeoViewTouchDelegate {
             self.shapesOverlay.graphics.removeAllObjects()
             
             // Create a highly visible fill symbol for rectangle
-            let lineSymbol = AGSSimpleLineSymbol(style: .solid, color: .red, width: 4)
+            let lineSymbol = AGSSimpleLineSymbol(style: .dash, color: .red, width: 2)
             let fillSymbol = AGSSimpleFillSymbol(
                 style: .solid,
-                color: UIColor.blue.withAlphaComponent(0.5),
+                color: UIColor.gray.withAlphaComponent(0.5),
                 outline: lineSymbol
             )
-            
+            selectPointsInsideShape(with: geometry)
             let graphic = AGSGraphic(geometry: geometry, symbol: fillSymbol)
             self.shapesOverlay.graphics.add(graphic)
             print("Added graphic to overlay. Graphics count: \(self.shapesOverlay.graphics.count)")
             
         case .ended:
             mapView.interactionOptions.isPanEnabled = true
-            
-            guard let start = startPoint else { return }
-            let builder = AGSPolygonBuilder(spatialReference: .wgs84())
-            let minX = min(start.x, mapPoint.x)
-            let maxX = max(start.x, mapPoint.x)
-            let minY = min(start.y, mapPoint.y)
-            let maxY = max(start.y, mapPoint.y)
-            
-            builder.addPointWith(x: minX, y: minY)
-            builder.addPointWith(x: maxX, y: minY)
-            builder.addPointWith(x: maxX, y: maxY)
-            builder.addPointWith(x: minX, y: maxY)
-            builder.addPointWith(x: minX, y: minY)
-            
-            let geometry = builder.toGeometry()
-            print("Pan ended with geometry: \(geometry)")
-            selectPointsInsideShape(with: geometry)
-            self.shapesOverlay.graphics.removeAllObjects()
-            startPoint = nil
-            print("Pan ended")
-            
+            //selectPointsInsideShape(with: geometry)
         default:
             break
         }
